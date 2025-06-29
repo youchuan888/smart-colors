@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" /  <meta property="og:title" content="a smart Top to down lighting with controllable 5 direction beam"/>
   <meta property="og:description" content="This smart color system show rich function those include solid color, RGB mix color, multi-CCT warm white, color drift, breathing, fire-fly like and slide dimmer etc."/>
-  <meta property="og:image" content="lighting.jpg"/>>
+  <meta property="og:image" content="lighting.jpg"/>
 
   <title>Smart Color Lighting</title>
   <style>
@@ -89,7 +89,6 @@
   <button class="connect-btn" onclick="connectBLE()">Connect / Disconnect</button>
 
   <div class="status" id="status">Disconnected</div>
-  <div class="log" id="log">Log will appear here.</div>
 
   <script>
     let bleDevice, bleServer, ledChar;
@@ -136,7 +135,6 @@
       }
       const data = Uint8Array.from([1, ...rgb]);
       ledChar.writeValue(data);
-      log(`Sent Color RGB(${rgb.join(',')}) => [${data.join(',')}]`);
     }
 
     function sliderChanged(val) {
@@ -147,7 +145,6 @@
       const v = parseInt(val);
       const data = Uint8Array.from([2, v, 0, 0]);
       ledChar.writeValue(data);
-      log(`Slider Value ${v} => [${data.join(',')}]`);
     }
 
     function sendCommand(code) {
@@ -157,7 +154,6 @@
       }
       const data = Uint8Array.from([3, code, 0, 0]);
       ledChar.writeValue(data);
-      log(`Button${code} Clicked => [${data.join(',')}]`);
     }
 
     function sendCommand_2(code) {
@@ -167,7 +163,6 @@
       }
       const data = Uint8Array.from([code, 0, 0, 0]);
       ledChar.writeValue(data);
-      log(`Button${code} Clicked => [${data.join(',')}]`);
     }
 
 
