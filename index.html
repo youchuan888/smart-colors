@@ -11,47 +11,47 @@
     body {
       font-family: sans-serif;
       text-align: center;
-      width: 90%;
       max-width: 320px;
       margin: auto;
     }
     .title {
       font-size: 1.5em;
-      margin: 0.5em 0;
+      margin: 1em 0;
     }
     .color-grid, .warm-grid, .function-buttons {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 0.1em;
-      margin-bottom: 0.1
-    .canvas {
+      gap: 0.5em;
+      margin-bottom: 1em;
+    }
+    canvas {
       width: 200px;
       height: 200px;
-      border-radius: 38%;
-      margin-bottom: 0.1em;
+      border-radius: 50%;
+      margin-bottom: 1em;
       touch-action: none;
     }
     .button, .connect-btn {
       padding: 1em;
-      margin: 0.1em;
+      margin: 0.3em;
       font-size: 1em;
       border: none;
       border-radius: 0.5em;
       cursor: pointer;
     }
     .connect-btn {
+      width: 100%;
       background-color: #444;
       color: white;
-      width=100%;
     }
     .status, .log {
       background: #eee;
-      padding: 1em;
-      margin-top: 0.1em;
+      padding: 0.8em;
+      margin-top: 0.5em;
       font-size: 0.9em;
     }
     input[type=range] {
-      width=100%;
+      width: 100%;
     }
   </style>
 </head>
@@ -86,12 +86,10 @@
   </div>
 
   <input type="range" min="1" max="20" value="10" id="slider" oninput="sliderChanged(this.value)">
-  
-  <div class="function-buttons">
   <button class="connect-btn" onclick="connectBLE()">Connect / Disconnect</button>
-  </div>
 
   <div class="status" id="status">Disconnected</div>
+  <div class="log" id="log">Log will appear here.</div>
 
   <script>
     let bleDevice, bleServer, ledChar;
@@ -138,6 +136,7 @@
       }
       const data = Uint8Array.from([1, ...rgb]);
       ledChar.writeValue(data);
+      log(`Sent Color RGB(${rgb.join(',')}) => [${data.join(',')}]`);
     }
 
     function sliderChanged(val) {
@@ -148,6 +147,7 @@
       const v = parseInt(val);
       const data = Uint8Array.from([2, v, 0, 0]);
       ledChar.writeValue(data);
+      log(`Slider Value ${v} => [${data.join(',')}]`);
     }
 
     function sendCommand(code) {
@@ -157,6 +157,7 @@
       }
       const data = Uint8Array.from([3, code, 0, 0]);
       ledChar.writeValue(data);
+      log(`Button${code} Clicked => [${data.join(',')}]`);
     }
 
     function sendCommand_2(code) {
@@ -166,6 +167,7 @@
       }
       const data = Uint8Array.from([code, 0, 0, 0]);
       ledChar.writeValue(data);
+      log(`Button${code} Clicked => [${data.join(',')}]`);
     }
 
 
