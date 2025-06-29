@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" /  <meta property="og:title" content="a smart Top to down lighting with controllable 5 direction beam"/>
+  <meta property="og:description" content="This smart color system show rich function those include solid color, RGB mix color, multi-CCT warm white, color drift, breathing, fire-fly like and slide dimmer etc."/>
+  <meta property="og:image" content="lighting.jpg"/>>
+
+  <title>Smart Color Lighting</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      max-width: 320px;
+      margin: auto;
+    }
+    .title {
+      font-size: 1.5em;
+      margin: 1em 0;
+    }
+    .color-grid, .warm-grid, .function-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5em;
+      margin-bottom: 1em;
+    }
+    canvas {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      margin-bottom: 1em;
+      touch-action: none;
+    }
+    .button, .connect-btn {
+      padding: 1em;
+      margin: 0.3em;
+      font-size: 1em;
+      border: none;
+      border-radius: 0.5em;
+      cursor: pointer;
+    }
+    .connect-btn {
+      width: 100%;
+      background-color: #444;
+      color: white;
+    }
+    .status, .log {
+      background: #eee;
+      padding: 0.8em;
+      margin-top: 0.5em;
+      font-size: 0.9em;
+    }
+    input[type=range] {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="title">Smart Color Lighting</div>
+
+  <div class="color-grid" id="colorButtons">
+    <button class="button" style="background:red" data-rgb="255,0,0"></button>
+    <button class="button" style="background:green" data-rgb="0,255,0"></button>
+    <button class="button" style="background:blue" data-rgb="0,0,255"></button>
+    <button class="button" style="background:pink" data-rgb="255,182,193"></button>
+    <button class="button" style="background:aquamarine" data-rgb="127,255,212"></button>
+    <button class="button" style="background:lightblue" data-rgb="173,216,230"></button>
+    <button class="button" style="background:yellow" data-rgb="255,255,0"></button>
+    <button class="button" style="background:lawngreen" data-rgb="124,252,0"></button>
+    <button class="button" style="background:purple" data-rgb="128,0,128"></button>
+  </div>
+
+  <!-- Canvas Color Picker -->
+  <canvas id="colorCircle" width="200" height="200"></canvas>
+
+  <div class="warm-grid">
+    <button class="button" style="background:#f5deb3" onclick="sendCommand(30)">3000K</button>
+    <button class="button" style="background:#f4c27a" onclick="sendCommand(28)">2800K</button>
+    <button class="button" style="background:#e0a95a" onclick="sendCommand(26)">2600K</button>
+  </div>
+
+  <div class="function-buttons">
+    <button class="button" onclick="sendCommand_2(4)">FireFly</button>
+    <button class="button" onclick="sendCommand_2(5)">Breathing</button>
+    <button class="button" onclick="sendCommand_2(6)">colorDrift</button>
+  </div>
+
+  <input type="range" min="1" max="20" value="10" id="slider" oninput="sliderChanged(this.value)">
+  <button class="connect-btn" onclick="connectBLE()">Connect / Disconnect</button>
+
+  <div class="status" id="status">Disconnected</div>
+  <div class="log" id="log">Log will appear here.</div>
+
+  <script>
+    let bleDevice, bleServer, ledChar;
+    let connected = false;
+
+    const deviceName ='SmartLighting';
+    const bleService = '73a058dd-9fbe-41e2-b110-abd419c18dd7';
+    const ledCharacteristic = '73a058dd-9fbe-41e2-b110-abd419c18dd8';
+
+    document.querySelectorAll('[data-rgb]').forEach(btn => {
+      btn.onclick = () => {
+        const rgb = btn.dataset.rgb.split(',').map(n => parseInt(n));
+        sendColor(rgb);
+      };
+    });
+
+    async function connectBLE() {
+      try {
+        if (connected) {
+          bleDevice.gatt.disconnect();
+          document.getElementById('status').textContent = 'Disconnected';
+          connected = false;
+          return;
+        }
+        bleDevice = await navigator.bluetooth.requestDevice({
+          filters: [{ name: deviceName }],
+          optionalServices: [bleService]
+        });
+        bleServer = await bleDevice.gatt.connect();
+        const service = await bleServer.getPrimaryService(bleService);
+        ledChar = await service.getCharacteristic(ledCharacteristic);
+        connected = true;
+        document.getElementById('status').textContent = 'Connected to ' + deviceName;
+      } catch (err) {
+        document.getElementById('status').textContent = 'Connection failed';
+        console.error(err);
+      }
+    }
+
+    function sendColor(rgb) {
+      if (!connected || !ledChar) {
+        alert('Please connect to BLE device first!');
+        return;
+      }
+      const data = Uint8Array.from([1, ...rgb]);
+      ledChar.writeValue(data);
+      log(`Sent Color RGB(${rgb.join(',')}) => [${data.join(',')}]`);
+    }
+
+    function sliderChanged(val) {
+      if (!connected || !ledChar) {
+        alert('Please connect to BLE device first!');
+        return;
+      }
+      const v = parseInt(val);
+      const data = Uint8Array.from([2, v, 0, 0]);
+      ledChar.writeValue(data);
+      log(`Slider Value ${v} => [${data.join(',')}]`);
+    }
+
+    function sendCommand(code) {
+      if (!connected || !ledChar) {
+        alert('Please connect to BLE device first!');
+        return;
+      }
+      const data = Uint8Array.from([3, code, 0, 0]);
+      ledChar.writeValue(data);
+      log(`Button${code} Clicked => [${data.join(',')}]`);
+    }
+
+    function sendCommand_2(code) {
+      if (!connected || !ledChar) {
+        alert('Please connect to BLE device first!');
+        return;
+      }
+      const data = Uint8Array.from([code, 0, 0, 0]);
+      ledChar.writeValue(data);
+      log(`Button${code} Clicked => [${data.join(',')}]`);
+    }
+
+
+    function log(msg) {
+      document.getElementById('log').textContent = msg;
+    }
+
+    // Draw HSV circle on canvas
+    const canvas = document.getElementById('colorCircle');
+    const ctx = canvas.getContext('2d');
+    const radius = canvas.width / 2;
+    const image = ctx.createImageData(canvas.width, canvas.height);
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        const dx = x - radius;
+        const dy = y - radius;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        const hue = ((angle * 180 / Math.PI) + 360) % 360;
+        const sat = Math.min(dist / radius, 1);
+        const val = 1;
+        const [r, g, b] = hsvToRgb(hue, sat, val);
+        const idx = (y * canvas.width + x) * 4;
+        image.data[idx] = r;
+        image.data[idx + 1] = g;
+        image.data[idx + 2] = b;
+        image.data[idx + 3] = dist <= radius ? 255 : 0;
+      }
+    }
+    ctx.putImageData(image, 0, 0);
+
+    canvas.addEventListener('click', e => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+      sendColor([pixel[0], pixel[1], pixel[2]]);
+    });
+
+    function hsvToRgb(h, s, v) {
+      let c = v * s;
+      let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+      let m = v - c;
+      let [r, g, b] = [0, 0, 0];
+      if (h < 60) [r, g, b] = [c, x, 0];
+      else if (h < 120) [r, g, b] = [x, c, 0];
+      else if (h < 180) [r, g, b] = [0, c, x];
+      else if (h < 240) [r, g, b] = [0, x, c];
+      else if (h < 300) [r, g, b] = [x, 0, c];
+      else [r, g, b] = [c, 0, x];
+      return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+    }
+  </script>
+</body>
+</html>
