@@ -46,7 +46,7 @@
     }
     .status, .log {
       background: #eee;
-      padding: 0.8em;
+      padding: 1em;
       margin-top: 0.1em;
       font-size: 0.9em;
     }
@@ -86,7 +86,10 @@
   </div>
 
   <input type="range" min="1" max="20" value="10" id="slider" oninput="sliderChanged(this.value)">
+  
+  <div class="function-buttons">
   <button class="connect-btn" onclick="connectBLE()">Connect / Disconnect</button>
+  </div>
 
   <div class="status" id="status">Disconnected</div>
 
