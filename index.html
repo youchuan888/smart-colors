@@ -89,7 +89,6 @@
   <button class="connect-btn" onclick="connectBLE()">Connect / Disconnect</button>
 
   <div class="status" id="status">Disconnected</div>
-  <div class="log" id="log">Log will appear here.</div>
 
   <script>
     let bleDevice, bleServer, ledChar;
@@ -136,7 +135,6 @@
       }
       const data = Uint8Array.from([1, ...rgb]);
       ledChar.writeValue(data);
-      log(`Sent Color RGB(${rgb.join(',')}) => [${data.join(',')}]`);
     }
 
     function sliderChanged(val) {
@@ -147,7 +145,6 @@
       const v = parseInt(val);
       const data = Uint8Array.from([2, v, 0, 0]);
       ledChar.writeValue(data);
-      log(`Slider Value ${v} => [${data.join(',')}]`);
     }
 
     function sendCommand(code) {
@@ -167,7 +164,6 @@
       }
       const data = Uint8Array.from([code, 0, 0, 0]);
       ledChar.writeValue(data);
-      log(`Button${code} Clicked => [${data.join(',')}]`);
     }
 
 
